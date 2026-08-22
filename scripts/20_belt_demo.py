@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-sys.path.insert(0, r"C:\Users\HyeonYongLEE\Desktop\romantic_route")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "legacy_mvp"))
 for _s in (sys.stdout, sys.stderr):
     if hasattr(_s, "reconfigure"):
         _s.reconfigure(encoding="utf-8")
@@ -30,7 +30,12 @@ from scipy.spatial import cKDTree
 from romantic_route import routing, ui
 from romantic_route.config import AXES, Axis, QUIET_BY_HIGHWAY, QUIET_DEFAULT
 
-BELT = Path(r"C:\Users\HyeonYongLEE\Desktop\gyeongbuk-scenic-route\data\processed")
+# gyeongbuk-scenic-route 체크아웃의 data/processed 경로.
+# 기본값: 이 저장소와 나란히 clone 된 위치. 다르면 BELT_DATA 환경변수로 지정.
+import os
+BELT = Path(os.environ.get(
+    "BELT_DATA",
+    Path(__file__).resolve().parents[2] / "gyeongbuk-scenic-route" / "data" / "processed"))
 CRS = "EPSG:32652"          # UTM 52N — 벨트(동해안) 전역이 한 존에 들어간다
 _TF = pyproj.Transformer.from_crs(4326, CRS, always_xy=True)
 

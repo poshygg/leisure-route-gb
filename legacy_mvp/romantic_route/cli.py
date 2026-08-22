@@ -19,7 +19,7 @@ for _stream in (sys.stdout, sys.stderr):     # Windows cp949 대비
 import networkx as nx
 import osmnx as ox
 
-from . import explain, features, intent, layers, pbf, routing
+from . import explain, features, intent, layers, pbf, routing, ui
 from .config import AXES, active_axes
 
 
@@ -100,8 +100,10 @@ def main(argv=None) -> int:
     if args.dem is None and "gentle" in act:
         act.remove("gentle")
         dropped["gentle"] = "DEM 미지정 (--dem 으로 국토지리정보원 5m DEM 을 주면 활성화)"
+    excluded = []                       # UI 게이트 리포트용
     for k, why in dropped.items():
         print(f"    [-] {k} 제외: {why}")
+        excluded.append({"label": AXES[k].label if k in AXES else k, "reason": why})
     if not act:
         print("    활성 축이 없다. 기본 조합으로 대체한다.")
         act, weights = ["trees", "quiet"], {"trees": 0.5, "quiet": 0.5}
@@ -171,6 +173,7 @@ def main(argv=None) -> int:
             usable.append(k)
         else:
             print(f"        -> 제외: {d['reason']}")
+            excluded.append({"label": AXES[k].label, "reason": d["reason"]})
 
     if not usable:
         print()
@@ -195,11 +198,12 @@ def main(argv=None) -> int:
         if r is None:
             print("    예산 안에 회귀 코스를 못 찾았다. --loop 값을 늘려보라.")
             return 1
-        cands, baseline = [r], None
+        cands, baseline, baseline_nodes = [r], None, None
     else:
         dest = _nearest(Gp, d_ll)
         try:
-            baseline = nx.shortest_path_length(Gp, orig, dest, weight="length")
+            baseline_nodes = nx.shortest_path(Gp, orig, dest, weight="length")
+            baseline = nx.path_weight(Gp, baseline_nodes, weight="length")
         except (nx.NetworkXNoPath, nx.NodeNotFound):
             print("    두 지점이 보행망으로 연결되지 않는다.")
             return 1
@@ -224,7 +228,10 @@ def main(argv=None) -> int:
         print(explain.describe(i, st, weights, named))
         print()
 
-    path = explain.make_map(Gp, stats, edges.crs, args.out, feats, show)
+    path = ui.make_ui_map(
+        Gp, stats, edges.crs, args.out, feats=feats, weights=weights,
+        query=args.query or " + ".join(AXES[k].label for k in (args.axes or [])),
+        summary=summary, baseline_nodes=baseline_nodes, excluded=excluded)
     print(f"지도 저장: {path}")
     return 0
 

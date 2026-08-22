@@ -20,17 +20,24 @@ from ..config import INTERIM
 from .base import Scorer
 
 # 등급별 가중치와 폴백 버퍼 반경(m) — 폴리곤이 없는 경우에만 반경 사용
+# 종목명은 2024 국가유산 체계 개편 후 명칭 기준 (옛 명칭은 데이터에 더 이상 없음)
 GRADE = {
-    "국보":         (1.0, 300),
-    "보물":         (0.8, 150),
-    "사적":         (0.9, 300),
-    "명승":         (0.9, 300),
-    "천연기념물":   (0.7, 150),
-    "국가민속문화재": (0.6, 100),
-    "시도유형문화재": (0.5, 80),
-    "시도기념물":   (0.4, 80),
+    "국보":           (1.0, 300),
+    "보물":           (0.8, 150),
+    "사적":           (0.9, 300),
+    "국가민속문화유산": (0.6, 100),
+    "시도유형문화유산": (0.5, 80),
+    "시도민속문화유산": (0.5, 80),
+    "시도기념물":     (0.4, 80),
+    "문화유산자료":   (0.3, 50),
+    "국가등록문화유산": (0.3, 50),
+    "시도등록문화유산": (0.3, 50),
 }
 DEFAULT = (0.3, 50)
+# ⛔ 특징 사용 금지 종목 — 점수에 절대 넣지 않는다.
+#    명승은 검증 정답(앵커)이라 넣는 순간 AUC가 무의미해지고 (docs/04 누출 방지),
+#    자연유산(천연기념물·시도자연유산)은 v1 뷰포인트 전용이다 (scripts/01b 분류 규칙).
+FORBIDDEN = {"명승", "천연기념물", "시도자연유산"}
 VIEW_BUFFER_M = 80.0  # 폴리곤 경계로부터 "보이는" 거리
 
 
@@ -47,7 +54,10 @@ class HeritageScorer(Scorer):
         path = INTERIM / "heritage.gpkg"
         if not path.exists():
             raise FileNotFoundError(f"{path} 없음 — scripts/01_fetch_data.py 먼저 실행")
-        return gpd.read_file(path)
+        h = gpd.read_file(path)
+        if "grade" in h.columns:                      # 앵커·자연유산 누출 차단
+            h = h[~h["grade"].astype(str).isin(FORBIDDEN)]
+        return h
 
     def score(self, edges: gpd.GeoDataFrame) -> np.ndarray:
         h = self.to_metric(self._load())

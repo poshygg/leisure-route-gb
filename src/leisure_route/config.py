@@ -38,8 +38,12 @@ LAMBDA_GRID = (0.0, 8.0, 24)   # (start, stop, num) — 이분탐색 아님
 DETOUR_PRESETS = {"shortest": 1.0, "balanced": 1.25, "leisurely": 1.6}
 
 # --- 대상 지역 ---
+# 동해안 벨트 4시군(협업 SPEC v1.0) + 내륙 검증용 안동
 REGIONS = {
+    "pohang": {"name": "포항시", "code": "47110"},
     "gyeongju": {"name": "경주시", "code": "47130"},
+    "yeongdeok": {"name": "영덕군", "code": "47770"},
+    "uljin": {"name": "울진군", "code": "47930"},
     "andong": {"name": "안동시", "code": "47170"},
 }
 

@@ -1,7 +1,7 @@
 [project]
 name = "leisure-route"
 version = "0.1.0"
-description = "여유로운 보행 경로 추천 — 10속성 엣지 스코어링 기반 경로 탐색"
+description = "여유로운 보행 경로 추천 — 축 기반(A/B/Z) 엣지 스코어링 경로 탐색"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
@@ -36,3 +36,4 @@ target-version = "py311"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]   # pip install -e . 없이도 clone 직후 pytest가 돌게
