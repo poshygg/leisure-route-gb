@@ -59,9 +59,31 @@ def _pairs(s: Optional[str]) -> List[Tuple[float, float]]:
     return [_pair(part, "제외 지점") for part in s.split(";") if part.strip()]
 
 
+from pathlib import Path as _Path
+
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+_DIST = _Path(__file__).resolve().parents[1] / "frontend" / "dist"
+
+
 @app.get("/", response_class=HTMLResponse)
 def index():
+    """루트 = 여유길 웹앱 (frontend/dist). 빌드가 없으면 디버그 UI 폴백."""
+    idx = _DIST / "index.html"
+    if idx.exists():
+        return FileResponse(idx)
     return HTMLResponse(LIVE_HTML)
+
+
+@app.get("/debug", response_class=HTMLResponse)
+def debug_ui():
+    """엔진 디버그 뷰 (기존 낭만경로 스타일 실시간 탐색판)."""
+    return HTMLResponse(LIVE_HTML)
+
+
+if (_DIST / "assets").exists():
+    app.mount("/assets", StaticFiles(directory=_DIST / "assets"), name="assets")
 
 
 @app.get("/health")
@@ -93,13 +115,79 @@ def reverse(lng: float, lat: float):
     return ENGINE.reverse(lng, lat)
 
 
+import requests as _rq
+
+_geo_cache: dict = {}
+
+
+def _nominatim(q: str, limit: int) -> list:
+    """일반 지오코딩 폴백 — Photon(OSM, komoot). 검색-자동완성용이라
+    '포항공' 같은 부분 입력에도 포항공과대학교가 뜬다. 실패는 빈 목록."""
+    if q in _geo_cache:
+        return _geo_cache[q]
+    out = _photon_once(q, limit)
+    # '포항공대'처럼 별칭이 정식 명칭(포항공과대학교)과 어긋나면 결과가 빈약하다
+    # → 끝 글자를 줄여가며 재질의해 접두 매칭으로 보완한다 (포항공대→포항공→…)
+    qq = q
+    while len(out) < max(3, limit // 2) and len(qq) > 2:
+        qq = qq[:-1]
+        seen = {h["name"] for h in out}
+        out += [h for h in _photon_once(qq, limit) if h["name"] not in seen]
+    out = out[:limit]
+    _geo_cache[q] = out
+    return out
+
+
+def _photon_once(q: str, limit: int) -> list:
+    out = []
+    try:
+        r = _rq.get(
+            "https://photon.komoot.io/api",
+            params={"q": q, "limit": limit * 2, "lang": "default",
+                    # 경북 중심 바이어스 — 전국 검색은 되고 근처가 위로 온다
+                    "lat": 36.2, "lon": 129.0, "location_bias_scale": 0.3},
+            headers={"User-Agent": "leisure-route-gb/0.1 (poshygg@gmail.com)"},
+            timeout=5)
+        r.raise_for_status()
+        for f in r.json().get("features", []):
+            p = f.get("properties", {})
+            lng, lat = f["geometry"]["coordinates"]
+            if not (124 <= lng <= 132 and 33 <= lat <= 39):     # 한국 밖 제외
+                continue
+            if p.get("osm_value") in ("parking", "parking_space", "bus_stop"):
+                continue
+            name = p.get("name")
+            if not name:
+                continue
+            addr = ", ".join(x for x in (p.get("street"), p.get("district"),
+                                         p.get("city"), p.get("state")) if x)
+            out.append({"id": f"osm-{p.get('osm_id', name)}", "name": name,
+                        "address": addr or "대한민국", "type": "place",
+                        "pos": {"lng": float(lng), "lat": float(lat)}})
+            if len(out) >= limit:
+                break
+    except Exception:
+        out = []
+    return out
+
+
 @app.get("/api/search")
 def search(q: str, limit: int = Query(12, ge=1, le=50)):
-    """Expo 앱의 PlaceSearchResult(Place) 형태로 반환."""
-    return [{"id": f"pl-{i}-{h['name']}", "name": h["name"],
+    """장소 검색 — 자체 데이터(국가유산·공원, 근거 있음) 우선 + 전 지역 지오코딩 폴백."""
+    # 자체 데이터(근거 있는 문화재·공원)는 상위 절반까지만 — 나머지는 항상
+    # 일반 지오코딩으로 채워서 '포항공→포항공과대학교' 같은 자동완성이 밀리지 않게 한다
+    hits = [{"id": f"pl-{i}-{h['name']}", "name": h["name"],
              "address": h["addr"] or "경상북도", "type": h["kind"],
              "pos": {"lng": h["lng"], "lat": h["lat"]}}
-            for i, h in enumerate(ENGINE.search(q, limit))]
+            for i, h in enumerate(ENGINE.search(q, max(3, limit // 2)))]
+    if len(hits) < limit:
+        seen = {h["name"] for h in hits}
+        for g in _nominatim(q, limit - len(hits)):
+            if g["name"] in seen:          # 동명 중복(해수욕장+역 등)은 첫 건만
+                continue
+            seen.add(g["name"])
+            hits.append(g)
+    return hits[:limit]
 
 
 # ---------------------------------------------------------------- Expo 앱 규격
@@ -223,6 +311,16 @@ def _encode_polyline(pts, precision: int = 5) -> str:
             out.append(chr(v + 63))
         plat, plon = ilat, ilon
     return "".join(out)
+
+
+# SPA 라우팅 폴백 — /search, /routes 같은 프론트 경로 새로고침도 index.html 로.
+# (구체 라우트들이 먼저 정의돼 있어 /api·/route/v1·/assets 는 여기 안 온다)
+@app.get("/{path:path}", response_class=HTMLResponse, include_in_schema=False)
+def spa_fallback(path: str):
+    idx = _DIST / "index.html"
+    if idx.exists() and not path.startswith(("api/", "route/", "assets/")):
+        return FileResponse(idx)
+    raise HTTPException(404, "not found")
 
 
 if __name__ == "__main__":

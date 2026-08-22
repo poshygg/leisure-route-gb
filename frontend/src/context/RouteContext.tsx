@@ -77,6 +77,38 @@ export function RouteProvider({ children }: { children: ReactNode }) {
     return () => ac.abort()
   }, [endpoints.start.id, endpoints.goal.id, endpoints.start.pos, endpoints.goal.pos])
 
+  // 경유지 삭제 → 그 좌표를 exclude 로 백엔드 재탐색해 경로 선만 교체한다.
+  // (waypoints 목록은 base 경로 것을 유지해 삭제 칩·복원 UI 가 그대로 동작)
+  const [replanned, setReplanned] = useState<Record<string, RouteNode[]>>({})
+  useEffect(() => {
+    const entries = Object.entries(removed).filter(([, ids]) => ids.length > 0)
+    if (entries.length === 0) {
+      setReplanned({})
+      return
+    }
+    const ac = new AbortController()
+    void (async () => {
+      const next: Record<string, RouteNode[]> = {}
+      for (const [routeId, ids] of entries) {
+        const base = routes.find((r) => r.id === routeId)
+        if (!base) continue
+        const exclude = ids
+          .map((wid) => base.path.find((n) => n.waypointId === wid))
+          .filter((n): n is RouteNode => n !== undefined)
+        if (exclude.length === 0) continue
+        try {
+          const themes = await planThemes(endpoints.start.pos, endpoints.goal.pos, ac.signal, exclude)
+          const match = themes.find((t) => t.id === routeId) ?? themes[0]
+          if (match) next[routeId] = match.path
+        } catch {
+          // 서버가 없으면 로컬 필터 경로(직선 연결)로 폴백
+        }
+      }
+      if (!ac.signal.aborted) setReplanned(next)
+    })()
+    return () => ac.abort()
+  }, [removed, routes, endpoints.start.pos, endpoints.goal.pos])
+
   const swapEndpoints = useCallback(() => {
     setEndpoints((e) => ({ start: e.goal, goal: e.start }))
   }, [])
@@ -110,10 +142,11 @@ export function RouteProvider({ children }: { children: ReactNode }) {
       const route = routes.find((r) => r.id === routeId)
       if (!route) return null
       const removedIds = removed[routeId] ?? []
-      // 삭제된 경유 노드를 제외하고 이웃 노드를 직접 연결(경로 재계산)
-      const path = route.path.filter(
-        (n) => !(n.waypointId && removedIds.includes(n.waypointId)),
-      )
+      // 백엔드 재탐색 경로가 있으면 그걸 쓰고, 없으면(서버 부재) 노드 직접 연결 폴백
+      const path =
+        removedIds.length > 0 && replanned[routeId]
+          ? replanned[routeId]
+          : route.path.filter((n) => !(n.waypointId && removedIds.includes(n.waypointId)))
       const activeWaypoints = route.waypoints.filter((w) => !removedIds.includes(w.id))
       const meters = pathMeters(path)
       return {
@@ -125,7 +158,7 @@ export function RouteProvider({ children }: { children: ReactNode }) {
         removedCount: removedIds.length,
       }
     },
-    [removed, routes],
+    [removed, routes, replanned],
   )
 
   const value = useMemo(

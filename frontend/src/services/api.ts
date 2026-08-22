@@ -88,8 +88,16 @@ function toTheme(r: PlanRoute, themeKey: 'nature' | 'heritage' | 'fast', labels:
 }
 
 /** 출발·도착으로 백엔드 경로 계획 → 프론트 3테마. 실패 시 throw. */
-export async function planThemes(start: LngLat, goal: LngLat, signal?: AbortSignal): Promise<RouteTheme[]> {
-  const qs = `from=${start.lat},${start.lng}&to=${goal.lat},${goal.lng}&k=3`
+export async function planThemes(
+  start: LngLat,
+  goal: LngLat,
+  signal?: AbortSignal,
+  exclude: LngLat[] = [],
+): Promise<RouteTheme[]> {
+  let qs = `from=${start.lat},${start.lng}&to=${goal.lat},${goal.lng}&k=3`
+  if (exclude.length) {
+    qs += `&exclude=${exclude.map((p) => `${p.lat},${p.lng}`).join(';')}`
+  }
   const res = await fetch(`/api/plan?${qs}`, { signal })
   if (!res.ok) {
     const body = await res.json().catch(() => null)
