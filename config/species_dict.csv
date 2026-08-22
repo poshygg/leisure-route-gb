@@ -1,15 +1,15 @@
 canonical,aliases,leaf_type,evergreen,flowering,bloom_season,foliage,foliage_color,note
 벚나무류,왕벚나무|벛나무|겹벚나무|수양벚나무|산벚나무|올벚나무,활엽,N,Y,bloom_cherry,Y,주황,가로수 화목 대표종
 은행나무,-,침엽,N,N,-,Y,노랑,겉씨식물. 낙엽·노랑단풍이 핵심 (침엽 분류는 산림 관례)
-메타세쿼이아,황금메타세쿼이아|메타세콰이어|메타세콰이아,침엽,N,N,-,Y,적갈,낙엽침엽. 가로수길 명소 다수
+메타세쿼이아,황금메타세쿼이아|메타세콰이어|메타세콰이아|메타세콰이야|메타쉐콰이어,침엽,N,N,-,Y,적갈,낙엽침엽. 가로수길 명소 다수
 이팝나무,이팝,활엽,N,Y,bloom_late_spring,N,-,5월 흰꽃
 느티나무,-,활엽,N,N,-,Y,갈황,정자목
 배롱나무,백일홍나무,활엽,N,Y,bloom_summer,N,-,여름 내내 개화
 양버즘나무,플라타너스|버즘나무,활엽,N,N,-,N,-,
 소나무,해송|곰솔|반송,침엽,Y,N,-,N,-,상록. 겨울 부스트 대상
-잣나무,스트로브잣나무|스트로브잣,침엽,Y,N,-,N,-,
-단풍나무류,단풍나무|홍단풍|중국단풍|복자기|고로쇠나무,활엽,N,N,-,Y,빨강,단풍 대표종
-백합나무,튤립나무,활엽,N,Y,bloom_late_spring,Y,노랑,
+잣나무,스트로브잣나무|스트로브잣|스잣,침엽,Y,N,-,N,-,
+단풍나무류,단풍나무|홍단풍|청단풍|공작단풍|세열단풍|중국단풍|복자기|고로쇠나무,활엽,N,N,-,Y,빨강,단풍 대표종
+백합나무,튤립나무|목백합|튜울립|튤립,활엽,N,Y,bloom_late_spring,Y,노랑,
 산딸나무,-,활엽,N,Y,bloom_late_spring,Y,빨강,
 무궁화,-,활엽,N,Y,bloom_summer,N,-,
 회화나무,-,활엽,N,Y,bloom_summer,N,-,8월 개화
@@ -31,3 +31,7 @@ canonical,aliases,leaf_type,evergreen,flowering,bloom_season,foliage,foliage_col
 모과나무,-,활엽,N,Y,bloom_cherry,N,-,
 꽃사과,꽃사과나무|서부해당화,활엽,N,Y,bloom_cherry,N,-,
 철쭉류,철쭉|영산홍|산철쭉|진달래,활엽,N,Y,bloom_royal_azalea,N,-,관목이지만 가로변 식재 다수
+대왕참나무,핀오크,활엽,N,N,-,Y,빨강,
+계수나무,-,활엽,N,N,-,Y,노랑,
+낙우송,-,침엽,N,N,-,Y,적갈,낙엽침엽
+산사나무,-,활엽,N,Y,bloom_late_spring,N,-,
