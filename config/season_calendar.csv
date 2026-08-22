@@ -1,0 +1,5 @@
+season_id,label,start_mmdd,end_mmdd,gated_features,note
+bloom_cherry,벚꽃 개화,0401,0415,A6,경북 기준. 기상청 당해 개화 발표로 매년 갱신
+bloom_royal_azalea,철쭉,0501,0520,A6,수종 필드에 철쭉류 있을 때만
+foliage,단풍,1020,1110,F1,산림청 단풍 예측 기준. 활엽수(A1) 재사용
+evergreen,상록(겨울),1201,0228,A2,겨울철 침엽수 가중 부스트

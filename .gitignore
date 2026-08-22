@@ -1,0 +1,43 @@
+# --- 데이터 (절대 커밋 금지: 용량 + 재배포 라이선스) ---
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.gpkg
+*.osm.pbf
+*.tif
+*.tiff
+*.gpx
+
+# --- 비밀 ---
+.env
+.env.local
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# --- 산출물 ---
+outputs/
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

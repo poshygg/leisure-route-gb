@@ -1,0 +1,10 @@
+label,icon,expr,threshold_note,viewpoint
+숲길,🌲,A1 + A2 > 0.5,분포 상위 20~30%가 받도록 조정,local_max(A1+A2)
+벚꽃길,🌸,A6 > 0.1 AND in_bloom_season,개화기 게이트 필수,local_max(A6)
+강변길,🌊,A3_dist < 200,최근접 거리 기준,min_dist(A3)
+해안길,🏖,A4_dist < 300,최근접 거리 기준,min_dist(A4)
+문화재길,🏛,B1 + B2 + B3 >= 1,개수 기준,point(B1|B2|B3)
+전통마을,🏘,B4_dist < 500,최근접 거리 기준,min_dist(B4)
+특화거리,🎨,B6 == 1,포함 여부,point(B6)
+조형물,🗿,B5 >= 1,개수 기준,point(B5)
+공단 인접,⚠️,Z1 > 0.2,경고 라벨. 감점과 별도로 표시,-
