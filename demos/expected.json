@@ -1,0 +1,42 @@
+{
+  "gameunsa": [
+    {
+      "rank": 1,
+      "km": 1.48,
+      "detour": 1.0,
+      "score": 0.607
+    },
+    {
+      "rank": 2,
+      "km": 1.48,
+      "detour": 1.01,
+      "score": 0.582
+    },
+    {
+      "rank": 3,
+      "km": 1.65,
+      "detour": 1.11,
+      "score": 0.552
+    }
+  ],
+  "pohang": [
+    {
+      "rank": 1,
+      "km": 3.46,
+      "detour": 1.07,
+      "score": 0.508
+    },
+    {
+      "rank": 2,
+      "km": 3.55,
+      "detour": 1.1,
+      "score": 0.456
+    },
+    {
+      "rank": 3,
+      "km": 4.53,
+      "detour": 1.41,
+      "score": 0.362
+    }
+  ]
+}

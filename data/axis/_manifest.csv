@@ -1,0 +1,14 @@
+﻿feature_id,status,rows,source,note
+A1,proxy,811,streettrees_gb_classified.csv,임상도(FGIS) 승인 전 가로수 프록시. 정의는 면적비 — 도착 시 교체
+A2,proxy,811,streettrees_gb_classified.csv,임상도(FGIS) 승인 전 가로수 프록시. 정의는 면적비 — 도착 시 교체
+A6,ready,811,streettrees_gb_classified.csv,"정본. value=개화종 그루수 비율, weight=전체 그루수"
+A3,partial,77832,gyeongbuk-scenic-route/rivers_geometry_belt.csv,벨트 4시군만. 전경북 확장 필요
+A4,ready,22099,gyeongbuk-scenic-route/coastline_belt.csv,"경북 해안 = 벨트 4시군이라 이것으로 완결 (울릉 제외, ADR-011)"
+A5,missing,0,환경부 토지피복 세분류,EGIS 승인 대기. v1 제외(음수 특징) — 컬럼만 계산·보존 예정
+A7,ready,1148,data/raw/parks/parks_gb.csv,"usable=False(어린이·묘지 946건 중 일부)는 점수 제외, 표시만"
+B1,ready,951,data/processed/heritage_gb_mapped.csv,건축물형 (사찰·서원·고택·근대건축) · usable=False는 좌표 결측(지오코딩 대기)
+B2,ready,351,data/processed/heritage_gb_mapped.csv,석조물형 (석탑·석불·비석·마애불) · usable=False는 좌표 결측(지오코딩 대기)
+B3,ready,165,data/processed/heritage_gb_mapped.csv,유적형 (성곽·고분·봉수·터) · usable=False는 좌표 결측(지오코딩 대기)
+B4,ready,5,data/processed/heritage_gb_mapped.csv,"전통마을 (5건뿐 — thin, 뷰포인트 위주 운용) · usable=False는 좌표 결측(지오코딩 대기)"
+B5,missing,0,전국공공미술및조형물표준데이터,미수령 + 주소만 제공이라 지오코딩 단계 필요
+B6,missing,0,전국지역특화거리표준데이터,미수령 + 주소만 제공이라 지오코딩 단계 필요

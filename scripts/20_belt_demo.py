@@ -167,7 +167,12 @@ def main():
     ap.add_argument("--k", type=int, default=3)
     ap.add_argument("--pad", type=int, default=1200)
     ap.add_argument("--out", default="belt_demo.html")
+    ap.add_argument("--data", help="BELT 데이터 디렉터리 대체 (재현용 고정 픽스처: demos/data)")
     args = ap.parse_args()
+
+    global BELT
+    if args.data:
+        BELT = Path(args.data)
 
     o = tuple(map(float, args.orig.split(",")))
     d = tuple(map(float, args.dest.split(",")))
