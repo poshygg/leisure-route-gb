@@ -1,0 +1,115 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Pretendard Variable', Pretendard, system-ui, sans-serif;
+
+  /* Brand */
+  --color-brand: #2f6bff;
+  --color-brand-dark: #1f4fd8;
+  --color-start: #2f6bff;
+  --color-goal: #ff375f;
+
+  /* Themes */
+  --color-nature: #17b26a;
+  --color-nature-soft: #e7f8ef;
+  --color-heritage: #c47f2a;
+  --color-heritage-soft: #fbf1e2;
+  --color-fast: #7a7f8a;
+
+  /* Map palette */
+  --color-map-land: #f2f1ec;
+  --color-map-water: #bfe0f2;
+  --color-map-park: #d3ecc4;
+  --color-map-forest: #b9dfa6;
+  --color-map-road: #ffffff;
+  --color-map-road-edge: #e4e2da;
+  --color-map-major: #ffe9b0;
+  --color-map-major-edge: #f2d488;
+
+  /* Ink */
+  --color-ink: #17181c;
+  --color-ink-2: #5b606b;
+  --color-ink-3: #9aa0ab;
+
+  --shadow-sheet: 0 -8px 30px rgba(20, 22, 30, 0.12);
+  --shadow-card: 0 2px 14px rgba(20, 22, 30, 0.08);
+  --shadow-float: 0 6px 20px rgba(20, 22, 30, 0.16);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: #e9eef4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Hide scrollbars on inner scroll areas but keep scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.anim-sheet {
+  animation: sheet-up 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.anim-pop {
+  animation: pop-in 0.18s ease-out;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes dash-move {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
