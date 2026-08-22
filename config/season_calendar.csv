@@ -1,5 +1,8 @@
 season_id,label,start_mmdd,end_mmdd,gated_features,note
-bloom_cherry,벚꽃 개화,0401,0415,A6,경북 기준. 기상청 당해 개화 발표로 매년 갱신
-bloom_royal_azalea,철쭉,0501,0520,A6,수종 필드에 철쭉류 있을 때만
-foliage,단풍,1020,1110,F1,산림청 단풍 예측 기준. 활엽수(A1) 재사용
-evergreen,상록(겨울),1201,0228,A2,겨울철 침엽수 가중 부스트
+bloom_early_spring,이른 봄꽃(매화·산수유·목련),0310,0331,A6,경북 기준 자리표시
+bloom_cherry,벚꽃,0401,0415,A6,기상청 당해 개화 발표로 매년 갱신
+bloom_royal_azalea,철쭉·진달래,0420,0520,A6,
+bloom_late_spring,늦봄 흰꽃(이팝·아까시·산딸),0501,0531,A6,
+bloom_summer,여름꽃(배롱·무궁화·회화),0701,0910,A6,배롱나무는 100일 개화
+foliage,단풍,1020,1110,F1,산림청 단풍 예측 기준. 활엽수(A1)+가로수 단풍종 재사용
+evergreen,상록(겨울),1201,0228,A2,침엽수(임상도)+상록 가로수 가중 부스트
