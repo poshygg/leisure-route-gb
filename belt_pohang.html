@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>낭만 경로</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --surface:#fcfcfb; --panel:#ffffff; --line:#e8e7e3;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#8a8a85;
+  --track:#efeeea; --accent:#2a78d6;
+}
+*{box-sizing:border-box; margin:0}
+html,body{height:100%}
+body{
+  font-family:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  background:var(--surface); color:var(--ink); display:flex; overflow:hidden;
+}
+#side{
+  width:352px; min-width:352px; height:100%; overflow-y:auto;
+  background:var(--panel); border-right:1px solid var(--line); padding:20px 18px 28px;
+}
+#map{flex:1; height:100%; background:#eef0ee}
+h1{font-size:17px; font-weight:700; letter-spacing:-.2px}
+.sub{font-size:12.5px; color:var(--ink-2); margin-top:6px; line-height:1.5}
+.query{
+  margin-top:10px; padding:9px 12px; background:var(--surface);
+  border:1px solid var(--line); border-radius:9px;
+  font-size:13px; color:var(--ink-2); line-height:1.45;
+}
+.query b{color:var(--ink); font-weight:600}
+.sect{font-size:11px; font-weight:700; color:var(--ink-3);
+  letter-spacing:.08em; margin:20px 0 8px}
+.gate{
+  border:1px solid var(--line); border-left:3px solid var(--ink-3);
+  border-radius:8px; padding:9px 11px; font-size:12px;
+  color:var(--ink-2); line-height:1.5; margin-bottom:8px; background:var(--surface);
+}
+.gate b{color:var(--ink)}
+.card{
+  border:1px solid var(--line); border-radius:12px; padding:13px 14px;
+  margin-bottom:10px; cursor:pointer; background:var(--panel);
+  transition:border-color .12s, box-shadow .12s;
+}
+.card:hover{border-color:#c9c8c2}
+.card.on{border-color:var(--ink); box-shadow:0 1px 6px rgba(0,0,0,.07)}
+.card-top{display:flex; align-items:baseline; gap:8px}
+.rank{
+  font-size:11px; font-weight:700; color:var(--ink-2);
+  border:1px solid var(--line); border-radius:999px; padding:2px 8px;
+}
+.card.on .rank{background:var(--ink); color:#fff; border-color:var(--ink)}
+.stats{font-size:13.5px; font-weight:650}
+.stats .dim{color:var(--ink-3); font-weight:400; margin:0 1px}
+.score{margin-left:auto; font-size:13px; font-weight:700}
+.score .lbl{font-size:10.5px; font-weight:500; color:var(--ink-3); margin-right:3px}
+.bars{margin-top:11px; display:grid; gap:7px}
+.bar-row{display:grid; grid-template-columns:70px 1fr 40px; gap:8px; align-items:center}
+.bar-lbl{font-size:11.5px; color:var(--ink-2); display:flex; align-items:center; gap:5px}
+.dot{width:8px; height:8px; border-radius:50%; flex:none}
+.track{display:block; height:6px; background:var(--track); border-radius:4px; overflow:hidden}
+.fill{display:block; height:100%; border-radius:4px}
+.bar-val{font-size:11px; color:var(--ink-2); text-align:right;
+  font-variant-numeric:tabular-nums}
+.meta-row{margin-top:10px; display:flex; gap:6px; flex-wrap:wrap}
+.chip{font-size:10.5px; color:var(--ink-2); border:1px solid var(--line);
+  border-radius:999px; padding:2.5px 8px; background:var(--surface)}
+.pois{margin-top:10px; border-top:1px dashed var(--line); padding-top:9px;
+  display:none; flex-wrap:wrap; gap:5px}
+.card.on .pois{display:flex}
+.poi{font-size:11px; color:var(--ink-2); display:inline-flex; align-items:center;
+  gap:5px; border:1px solid var(--line); border-radius:7px; padding:3px 8px}
+.legend-box{display:grid; gap:6px; font-size:12px; color:var(--ink-2)}
+.legend-box .row{display:flex; align-items:center; gap:8px}
+.swatch{width:18px; height:5px; border-radius:3px; flex:none}
+.dash{width:18px; border-top:2px dashed var(--ink-3); flex:none}
+.foot{margin-top:22px; font-size:11px; color:var(--ink-3); line-height:1.6}
+.leaflet-tooltip.seg-tip{
+  font-family:inherit; font-size:12px; line-height:1.5;
+  border:1px solid var(--line); box-shadow:0 2px 8px rgba(0,0,0,.09);
+  border-radius:8px; padding:7px 10px;
+}
+.seg-tip b{font-size:12px}
+.seg-tip .r{display:flex; align-items:center; gap:6px; margin-top:3px; color:var(--ink-2)}
+.pin{
+  width:12px; height:12px; border-radius:50%;
+  border:2.5px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.35);
+}
+.ep{
+  font-size:11px; font-weight:700; color:#fff; background:var(--ink);
+  border-radius:999px; padding:3px 9px; white-space:nowrap;
+  box-shadow:0 1px 5px rgba(0,0,0,.3); transform:translate(-50%,-50%);
+  display:inline-block;
+}
+@media (max-width:760px){
+  body{flex-direction:column}
+  #side{width:100%; min-width:0; height:46%; order:2; border-right:0;
+    border-top:1px solid var(--line)}
+  #map{height:54%}
+}
+</style>
+</head>
+<body>
+<div id="side">
+  <h1>낭만 경로</h1>
+  <div class="sub" id="sub"></div>
+  <div class="query" id="query"></div>
+  <div id="gates"></div>
+  <div class="sect">추천 경로</div>
+  <div id="cards"></div>
+  <div class="sect">범례</div>
+  <div class="legend-box" id="legend"></div>
+  <div class="foot">간선을 지배 축 색으로 칠했다 — 그 구간에서 무엇이 가장 좋은지가 색이다.<br>
+  점수는 간선 길이 가중 평균(0~1). 회색 점선은 최단경로 기준선.</div>
+</div>
+<div id="map"></div>
+<script>
+const D = {"query": "벨트 공공데이터 데모 — 해안 + 공원 + 조용함", "summary": "국가유산·해안선·도시공원·OSM 위계 (gyeongbuk-scenic-route 가공본, 읽기 전용)", "weights": {"coast": 0.333, "parks": 0.333, "quiet": 0.333}, "axes": {"coast": {"label": "해안", "color": "#4a3aa7"}, "parks": {"label": "공원", "color": "#1baf7a"}, "quiet": {"label": "조용함", "color": "#2a78d6"}}, "excluded": [{"label": "하천", "reason": "rivers_belt.csv 빈 파일 — KRF 수령 전 (SPEC A3)"}, {"label": "화목 가로수", "reason": "벨트 등재 3~4구간뿐 — 특징 유도 불가 (SPEC A6 blocked)"}, {"label": "문화재", "reason": "쓸만한 간선 0.2% (기준 3%)"}], "routes": [{"rank": 1, "km": 3.46, "min": 46, "detour": 1.07, "score": 0.508, "variety": 0.62, "axis_means": {"coast": 0.603, "parks": 0.012, "quiet": 0.673}, "segments": [{"c": [[36.057263, 129.3783], [36.056201, 129.377865], [36.056119, 129.377852], [36.055907, 129.377775], [36.0558, 129.377723], [36.055018, 129.377498], [36.054846, 129.377458], [36.054709, 129.377433], [36.054572, 129.377418], [36.053747, 129.377415], [36.053157, 129.377436], [36.052726, 129.37747], [36.052664, 129.377485], [36.05253, 129.377542], [36.052501, 129.377514], [36.052466, 129.377479], [36.052439, 129.377453], [36.052431, 129.377277], [36.052424, 129.377136], [36.052346, 129.376452], [36.052282, 129.375918], [36.052254, 129.375749], [36.052026, 129.374556], [36.052022, 129.37454], [36.051925, 129.374561], [36.05167, 129.374616], [36.051611, 129.374259], [36.051603, 129.374212], [36.050873, 129.372815], [36.05082, 129.372721], [36.050781, 129.372696], [36.050726, 129.37267], [36.049852, 129.372467], [36.049887, 129.372116], [36.049458, 129.372134], [36.049334, 129.372126], [36.049249, 129.37212], [36.048954, 129.372068], [36.048794, 129.372049], [36.048687, 129.372034], [36.048698, 129.371927], [36.048721, 129.371788], [36.048777, 129.371619]], "a": "coast", "s": {"coast": 0.806, "parks": 0.025, "quiet": 0.572}}, {"c": [[36.048777, 129.371619], [36.048057, 129.371227], [36.04797, 129.371459], [36.046881, 129.371185], [36.046186, 129.371007], [36.045868, 129.370929], [36.045286, 129.370783], [36.044588, 129.370605], [36.043564, 129.370349], [36.042488, 129.370068], [36.04156, 129.369898], [36.041591, 129.369603], [36.041599, 129.369166], [36.040829, 129.369028], [36.040444, 129.368959], [36.040362, 129.368944], [36.039913, 129.368864], [36.039297, 129.368753], [36.038256, 129.368567], [36.037485, 129.368429], [36.037425, 129.368019], [36.037359, 129.367665], [36.037162, 129.36691], [36.036926, 129.365874], [36.036421, 129.365969], [36.036247, 129.365209], [36.03621, 129.365047], [36.036134, 129.364875]], "a": "quiet", "s": {"coast": 0.524, "parks": 0.009, "quiet": 0.797}}, {"c": [[36.036134, 129.364875], [36.035866, 129.364963]], "a": "coast", "s": {"coast": 0.101, "parks": 0.001, "quiet": 0.1}}, {"c": [[36.035866, 129.364963], [36.035453, 129.365108], [36.035072, 129.365258], [36.034901, 129.365319], [36.034872, 129.365328], [36.034702, 129.365385], [36.034083, 129.365597], [36.03345, 129.365026]], "a": "quiet", "s": {"coast": 0.079, "parks": 0.001, "quiet": 0.189}}], "pois": []}, {"rank": 2, "km": 3.55, "min": 47, "detour": 1.1, "score": 0.456, "variety": 0.56, "axis_means": {"coast": 0.608, "parks": 0.011, "quiet": 0.557}, "segments": [{"c": [[36.057263, 129.3783], [36.056201, 129.377865], [36.056119, 129.377852], [36.055907, 129.377775], [36.0558, 129.377723], [36.055018, 129.377498], [36.054846, 129.377458], [36.054709, 129.377433], [36.054572, 129.377418], [36.053747, 129.377415], [36.053157, 129.377436], [36.052726, 129.37747], [36.052664, 129.377485], [36.05253, 129.377542], [36.052501, 129.377514], [36.052466, 129.377479], [36.052468, 129.377462]], "a": "coast", "s": {"coast": 0.742, "parks": 0.032, "quiet": 0.558}}, {"c": [[36.052468, 129.377462], [36.052466, 129.37738], [36.052482, 129.37724]], "a": "quiet", "s": {"coast": 0.675, "parks": 0.015, "quiet": 0.68}}, {"c": [[36.052482, 129.37724], [36.052496, 129.37712], [36.052484, 129.377038], [36.05242, 129.376436], [36.052366, 129.375989], [36.05235, 129.37587], [36.052328, 129.375742], [36.052192, 129.374965], [36.052139, 129.374688], [36.052108, 129.374521], [36.052049, 129.374208], [36.052015, 129.374077], [36.051996, 129.374017], [36.051991, 129.373999], [36.051908, 129.373799], [36.051541, 129.373083], [36.051382, 129.372787], [36.051322, 129.372691], [36.051255, 129.372601], [36.051187, 129.372526], [36.051121, 129.372462], [36.051047, 129.372409], [36.050977, 129.372364], [36.050908, 129.372332], [36.05073, 129.37226], [36.05039, 129.372157], [36.050189, 129.372111], [36.049887, 129.372116], [36.049458, 129.372134], [36.049334, 129.372126], [36.04917, 129.372044], [36.04903, 129.371953], [36.048953, 129.371754], [36.048935, 129.371854], [36.048904, 129.371955], [36.04885, 129.37201], [36.048794, 129.372049], [36.048687, 129.372034], [36.0483, 129.371989], [36.047813, 129.37188], [36.046836, 129.3716], [36.04584, 129.371341], [36.044551, 129.370995], [36.043528, 129.370724], [36.043163, 129.370618], [36.042452, 129.370448], [36.041588, 129.370293]], "a": "coast", "s": {"coast": 0.816, "parks": 0.016, "quiet": 0.435}}, {"c": [[36.041588, 129.370293], [36.04156, 129.369898], [36.040353, 129.369699]], "a": "quiet", "s": {"coast": 0.796, "parks": 0.004, "quiet": 0.9}}, {"c": [[36.040353, 129.369699], [36.040332, 129.369854]], "a": "coast", "s": {"coast": 0.826, "parks": 0.003, "quiet": 0.4}}, {"c": [[36.040332, 129.369854], [36.040258, 129.369842]], "a": "quiet", "s": {"coast": 0.844, "parks": 0.002, "quiet": 1.0}}, {"c": [[36.040258, 129.369842], [36.040263, 129.3698], [36.040279, 129.369669]], "a": "coast", "s": {"coast": 0.826, "parks": 0.002, "quiet": 0.4}}, {"c": [[36.040279, 129.369669], [36.039285, 129.369487], [36.039288, 129.369265], [36.039297, 129.368753], [36.039316, 129.368272], [36.039332, 129.367717], [36.039323, 129.367214], [36.038944, 129.367171], [36.038941, 129.366643], [36.038187, 129.366372], [36.037496, 129.366092], [36.037145, 129.365925], [36.036926, 129.365874], [36.036998, 129.365278]], "a": "quiet", "s": {"coast": 0.375, "parks": 0.002, "quiet": 0.9}}, {"c": [[36.036998, 129.365278], [36.036828, 129.365206], [36.036486, 129.365085], [36.03621, 129.365047]], "a": "coast", "s": {"coast": 0.125, "parks": 0.001, "quiet": 0.1}}, {"c": [[36.03621, 129.365047], [36.036134, 129.364875]], "a": "quiet", "s": {"coast": 0.107, "parks": 0.001, "quiet": 0.4}}, {"c": [[36.036134, 129.364875], [36.035866, 129.364963]], "a": "coast", "s": {"coast": 0.101, "parks": 0.001, "quiet": 0.1}}, {"c": [[36.035866, 129.364963], [36.03575, 129.364461], [36.035321, 129.364451], [36.035206, 129.364408], [36.035106, 129.364371], [36.035069, 129.364357], [36.034875, 129.364283], [36.034747, 129.36422], [36.034554, 129.364199], [36.034333, 129.364072], [36.034131, 129.363956], [36.033773, 129.364519], [36.03345, 129.365026]], "a": "quiet", "s": {"coast": 0.065, "parks": 0.001, "quiet": 0.637}}], "pois": []}, {"rank": 3, "km": 4.53, "min": 60, "detour": 1.41, "score": 0.362, "variety": 0.59, "axis_means": {"coast": 0.616, "parks": 0.021, "quiet": 0.425}, "segments": [{"c": [[36.057263, 129.3783], [36.057437, 129.378378], [36.057594, 129.378456], [36.05773, 129.378532], [36.058502, 129.379032], [36.060341, 129.380096], [36.060425, 129.380147], [36.060492, 129.3802], [36.060554, 129.380261], [36.061103, 129.380847]], "a": "coast", "s": {"coast": 0.879, "parks": 0.061, "quiet": 0.55}}, {"c": [[36.061103, 129.380847], [36.061137, 129.3808]], "a": "quiet", "s": {"coast": 0.946, "parks": 0.045, "quiet": 1.0}}, {"c": [[36.061137, 129.3808], [36.060875, 129.380444], [36.060669, 129.380224], [36.060599, 129.380149], [36.060534, 129.380088], [36.060458, 129.380027], [36.060379, 129.379973], [36.060283, 129.379914], [36.059266, 129.379329], [36.058994, 129.379169], [36.058052, 129.378601], [36.057945, 129.378536], [36.057782, 129.378433], [36.057656, 129.378359], [36.057553, 129.378307], [36.057375, 129.378227], [36.05643, 129.377826], [36.056136, 129.37771], [36.055965, 129.377648], [36.055789, 129.377589], [36.05558, 129.377526], [36.055058, 129.377376], [36.054907, 129.377337], [36.054785, 129.377312], [36.054676, 129.377299], [36.054645, 129.377295], [36.054505, 129.377267]], "a": "coast", "s": {"coast": 0.807, "parks": 0.054, "quiet": 0.409}}, {"c": [[36.054505, 129.377267], [36.054344, 129.377186], [36.054278, 129.377144], [36.054217, 129.377119], [36.053941, 129.377042], [36.053894, 129.377022], [36.053882, 129.376944], [36.053736, 129.376519], [36.053642, 129.376263], [36.053617, 129.376178], [36.053564, 129.376124], [36.053527, 129.376091], [36.053466, 129.37606], [36.05327, 129.376036]], "a": "quiet", "s": {"coast": 0.594, "parks": 0.03, "quiet": 0.708}}, {"c": [[36.05327, 129.376036], [36.053156, 129.376043], [36.053041, 129.376047], [36.052942, 129.376045], [36.052823, 129.37604], [36.052639, 129.376017], [36.049928, 129.375638], [36.049669, 129.375607], [36.049464, 129.375589], [36.049156, 129.37557], [36.04888, 129.375566], [36.048654, 129.375583], [36.048346, 129.375635], [36.047616, 129.375817], [36.046183, 129.376179], [36.046117, 129.376193], [36.046086, 129.376107], [36.045951, 129.375694], [36.045798, 129.375213], [36.045755, 129.375107], [36.045717, 129.375024], [36.045671, 129.374949], [36.045622, 129.374891], [36.045569, 129.374834], [36.045496, 129.374767], [36.045399, 129.374683], [36.045266, 129.374574], [36.045104, 129.374447], [36.044915, 129.374307], [36.044828, 129.374246], [36.044749, 129.374196], [36.04466, 129.374147], [36.044572, 129.374106], [36.044473, 129.374067], [36.044407, 129.37404], [36.044309, 129.374005], [36.044215, 129.373978], [36.044118, 129.373958], [36.044036, 129.373944], [36.043928, 129.373935], [36.042193, 129.373829], [36.042028, 129.373824], [36.041968, 129.373819], [36.041897, 129.373803], [36.041832, 129.373774], [36.041773, 129.373732], [36.041723, 129.373689], [36.041693, 129.37366], [36.041663, 129.373618], [36.041637, 129.373567], [36.041606, 129.373481], [36.041576, 129.373369], [36.041549, 129.373274], [36.041539, 129.373239], [36.041498, 129.373109], [36.041448, 129.372995], [36.041395, 129.372895], [36.041336, 129.372805], [36.041278, 129.37273], [36.04122, 129.37267], [36.041167, 129.372623], [36.041115, 129.372588], [36.041067, 129.372562], [36.041006, 129.37254], [36.04094, 129.372522], [36.040495, 129.372441], [36.040093, 129.372369], [36.039947, 129.372342], [36.039783, 129.372313]], "a": "coast", "s": {"coast": 0.776, "parks": 0.009, "quiet": 0.332}}, {"c": [[36.039783, 129.372313], [36.039795, 129.372213]], "a": "quiet", "s": {"coast": 0.893, "parks": 0.001, "quiet": 1.0}}, {"c": [[36.039795, 129.372213], [36.039216, 129.372107], [36.038907, 129.372053], [36.038779, 129.372028], [36.038677, 129.372002], [36.038583, 129.371969], [36.038484, 129.371927]], "a": "coast", "s": {"coast": 0.647, "parks": 0.001, "quiet": 0.55}}, {"c": [[36.038484, 129.371927], [36.038321, 129.371855], [36.038127, 129.371749], [36.038038, 129.371691], [36.037779, 129.371506], [36.037021, 129.370919], [36.03688, 129.370817], [36.036811, 129.370769], [36.036763, 129.37074], [36.036711, 129.370722], [36.036659, 129.370708], [36.036597, 129.370701], [36.036525, 129.370703], [36.03646, 129.370711], [36.036306, 129.370735], [36.035195, 129.37091], [36.035165, 129.370839], [36.035118, 129.370836], [36.035025, 129.370856], [36.034931, 129.370857], [36.034887, 129.370838], [36.034841, 129.370783], [36.034809, 129.370678], [36.034824, 129.370631], [36.034859, 129.370562], [36.034949, 129.370505], [36.03508, 129.370448], [36.035131, 129.370408], [36.035107, 129.370319], [36.035069, 129.3702], [36.034793, 129.370362], [36.03445, 129.36942], [36.034333, 129.3691], [36.034099, 129.368019], [36.033629, 129.368136], [36.03314, 129.368257], [36.03311, 129.368112], [36.03305, 129.367813], [36.033027, 129.367659], [36.032939, 129.367053], [36.03284, 129.366494], [36.032805, 129.366307], [36.032753, 129.366021], [36.032892, 129.365852], [36.032965, 129.365764], [36.033032, 129.365682], [36.03345, 129.365026]], "a": "quiet", "s": {"coast": 0.177, "parks": 0.001, "quiet": 0.623}}], "pois": []}], "baseline": [[36.057263, 129.3783], [36.056201, 129.377865], [36.056119, 129.377852], [36.055907, 129.377775], [36.0558, 129.377723], [36.055018, 129.377498], [36.054846, 129.377458], [36.054709, 129.377433], [36.054572, 129.377418], [36.053747, 129.377415], [36.053157, 129.377436], [36.052726, 129.37747], [36.052664, 129.377485], [36.05253, 129.377542], [36.052501, 129.377514], [36.052466, 129.377479], [36.052468, 129.377462], [36.052466, 129.37738], [36.052482, 129.37724], [36.052496, 129.37712], [36.052484, 129.377038], [36.05242, 129.376436], [36.052366, 129.375989], [36.05235, 129.37587], [36.052328, 129.375742], [36.052192, 129.374965], [36.052139, 129.374688], [36.052108, 129.374521], [36.052049, 129.374208], [36.052015, 129.374077], [36.051996, 129.374017], [36.051991, 129.373999], [36.051908, 129.373799], [36.051541, 129.373083], [36.051382, 129.372787], [36.051322, 129.372691], [36.051255, 129.372601], [36.051187, 129.372526], [36.051121, 129.372462], [36.051047, 129.372409], [36.050977, 129.372364], [36.050908, 129.372332], [36.05073, 129.37226], [36.05039, 129.372157], [36.050189, 129.372111], [36.049887, 129.372116], [36.049458, 129.372134], [36.049334, 129.372126], [36.04917, 129.372044], [36.04903, 129.371953], [36.048953, 129.371754], [36.04895, 129.371595], [36.048992, 129.371379], [36.048918, 129.37135], [36.048949, 129.371154], [36.048789, 129.371111], [36.048177, 129.370903], [36.048128, 129.370877], [36.047025, 129.370252], [36.046712, 129.370066], [36.046392, 129.369887], [36.046185, 129.369747], [36.045767, 129.369464], [36.044751, 129.368888], [36.04412, 129.368425], [36.043987, 129.368329], [36.042718, 129.367592], [36.041672, 129.367181], [36.041067, 129.366938], [36.040658, 129.366692], [36.040504, 129.366599], [36.040317, 129.366525], [36.039465, 129.366155], [36.039075, 129.365989], [36.038494, 129.365756], [36.038274, 129.365667], [36.037893, 129.365539], [36.037708, 129.365477], [36.037273, 129.365295], [36.037153, 129.365245], [36.036834, 129.365107], [36.036476, 129.364998], [36.036361, 129.364956], [36.036134, 129.364875], [36.035866, 129.364963], [36.035453, 129.365108], [36.035072, 129.365258], [36.034901, 129.365319], [36.034872, 129.365328], [36.034702, 129.365385], [36.034083, 129.365597], [36.03345, 129.365026]]};
+const GRAY = "#b7b6b0";
+
+const map = L.map("map", {zoomControl:true});
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  {attribution:"&copy; OpenStreetMap &copy; CARTO", maxZoom:19}).addTo(map);
+
+const layers = {baseline:L.layerGroup().addTo(map),
+                others:L.layerGroup().addTo(map),
+                casing:L.layerGroup().addTo(map),
+                segs:L.layerGroup().addTo(map),
+                pois:L.layerGroup().addTo(map),
+                ends:L.layerGroup().addTo(map)};
+let sel = 0;
+
+function axColor(k){ return (D.axes[k]||{}).color || GRAY; }
+function axLabel(k){ return (D.axes[k]||{}).label || k; }
+function fullCoords(r){ return r.segments.flatMap((s,i)=> i? s.c.slice(1): s.c); }
+
+function segTip(seg){
+  let h = "<b>"+ (seg.a? axLabel(seg.a): "—") +" 구간</b>";
+  const ks = Object.keys(seg.s||{}).sort((a,b)=>seg.s[b]-seg.s[a]);
+  for(const k of ks){
+    h += '<div class="r"><span class="dot" style="background:'+axColor(k)+'"></span>'
+       + axLabel(k) + " " + Math.round(seg.s[k]*100) + "%</div>";
+  }
+  return h;
+}
+
+function draw(){
+  for(const k in layers) layers[k].clearLayers();
+  const r = D.routes[sel];
+
+  if(D.baseline){
+    L.polyline(D.baseline, {color:"#52514e", weight:2, opacity:.65,
+      dashArray:"5 7", interactive:false}).addTo(layers.baseline);
+  }
+  D.routes.forEach((o,i)=>{
+    if(i===sel) return;
+    L.polyline(fullCoords(o), {color:GRAY, weight:4, opacity:.55})
+      .on("click", ()=>select(i))
+      .bindTooltip("경로 "+o.rank+" · "+o.km+"km · 점수 "+o.score,
+                   {sticky:true, className:"seg-tip"})
+      .addTo(layers.others);
+  });
+  L.polyline(fullCoords(r), {color:"#ffffff", weight:10, opacity:.9,
+    interactive:false}).addTo(layers.casing);
+  r.segments.forEach(seg=>{
+    L.polyline(seg.c, {color: seg.a? axColor(seg.a): GRAY, weight:6, opacity:.95})
+      .bindTooltip(segTip(seg), {sticky:true, className:"seg-tip"})
+      .addTo(layers.segs);
+  });
+  r.pois.forEach(p=>{
+    L.marker([p.lat,p.lon], {icon:L.divIcon({className:"", iconSize:[12,12],
+        html:'<div class="pin" style="background:'+axColor(p.axis)+'"></div>'})})
+      .bindTooltip(axLabel(p.axis)+" · "+p.name, {className:"seg-tip", direction:"top"})
+      .addTo(layers.pois);
+  });
+  const cs = fullCoords(r);
+  const mk = (ll,txt)=> L.marker(ll,{icon:L.divIcon({className:"",iconSize:[0,0],
+      html:'<span class="ep">'+txt+'</span>'}), interactive:false}).addTo(layers.ends);
+  mk(cs[0],"출발"); mk(cs[cs.length-1],"도착");
+}
+
+function select(i){
+  sel = i;
+  document.querySelectorAll(".card").forEach((el,j)=>el.classList.toggle("on", j===i));
+  draw();
+  map.fitBounds(L.polyline(fullCoords(D.routes[i])).getBounds(), {padding:[46,46]});
+}
+
+/* ---- 사이드패널 ---- */
+document.getElementById("sub").textContent =
+  "후보 " + D.routes.length + "개 · 활성 축 " + Object.keys(D.axes).length + "개";
+document.getElementById("query").innerHTML =
+  (D.query? "“<b>"+D.query+"</b>”": "") +
+  (D.summary? '<div style="margin-top:4px">해석: '+D.summary+"</div>": "");
+
+const gates = document.getElementById("gates");
+if(D.excluded.length){
+  const g = document.createElement("div");
+  g.innerHTML = '<div class="sect">데이터 게이트</div>' + D.excluded.map(e=>
+    '<div class="gate"><b>'+e.label+'</b> 축 제외 — '+e.reason+'</div>').join("");
+  gates.appendChild(g);
+}
+
+const cards = document.getElementById("cards");
+D.routes.forEach((r,i)=>{
+  const el = document.createElement("div");
+  el.className = "card" + (i===0? " on":"");
+  const ks = Object.keys(r.axis_means).sort((a,b)=>(D.weights[b]||0)-(D.weights[a]||0));
+  el.innerHTML =
+    '<div class="card-top"><span class="rank">'+r.rank+'위</span>'
+    + '<span class="stats">'+r.km+'<span class="dim">km</span> · '
+    + r.min+'<span class="dim">분</span> · '
+    + '<span class="dim">우회</span> '+r.detour+'x</span>'
+    + '<span class="score"><span class="lbl">종합</span>'+r.score.toFixed(3)+'</span></div>'
+    + '<div class="bars">' + ks.map(k=>{
+        const v = r.axis_means[k];
+        return '<div class="bar-row"><span class="bar-lbl">'
+          + '<span class="dot" style="background:'+axColor(k)+'"></span>'+axLabel(k)+'</span>'
+          + '<span class="track"><span class="fill" style="width:'+Math.round(v*100)
+          + '%;background:'+axColor(k)+'"></span></span>'
+          + '<span class="bar-val">'+Math.round(v*100)+'%</span></div>';
+      }).join("") + '</div>'
+    + '<div class="meta-row"><span class="chip">변화도 '+r.variety.toFixed(2)+'</span>'
+    + ks.map(k=>'<span class="chip">'+axLabel(k)+' 가중치 '
+        + Math.round((D.weights[k]||0)*100)+'%</span>').join("") + '</div>'
+    + (r.pois.length?
+        '<div class="pois">'+ r.pois.map(p=>
+          '<span class="poi"><span class="dot" style="background:'+axColor(p.axis)
+          +'"></span>'+p.name+'</span>').join("") + '</div>' : "");
+  el.addEventListener("click", ()=>select(i));
+  cards.appendChild(el);
+});
+
+const legend = document.getElementById("legend");
+legend.innerHTML = Object.keys(D.axes).map(k=>
+  '<div class="row"><span class="swatch" style="background:'+axColor(k)+'"></span>'
+  + axLabel(k)+' 구간</div>').join("")
+  + '<div class="row"><span class="swatch" style="background:'+GRAY+'"></span>다른 후보 경로</div>'
+  + (D.baseline? '<div class="row"><span class="dash"></span>최단경로 기준선</div>': "");
+
+draw();
+map.fitBounds(L.polyline(fullCoords(D.routes[0])).getBounds(), {padding:[46,46]});
+</script>
+</body>
+</html>
